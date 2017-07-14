@@ -80,6 +80,21 @@ function NodeID3() {
 }
 
 NodeID3.prototype.write = function(tags, filepath) {
+	var completeTag = getCompleteTag(tags);
+    try {
+        var data = fs.readFileSync(filepath);
+        data = this.removeTagsFromBuffer(data) || data;
+        var rewriteFile = Buffer.concat([completeTag, data]);
+        fs.writeFileSync(filepath, rewriteFile, 'binary');
+    } catch(e) {
+        return e;
+    }
+
+    return true;
+}
+
+
+NodeID3.prototype.getCompleteTag = function(tags) {
     var frames = [];
     frames.push(this.createTagHeader());
 
@@ -116,18 +131,7 @@ NodeID3.prototype.write = function(tags, filepath) {
     frames[0].writeUInt8(size[2], 8);
     frames[0].writeUInt8(size[3], 9);
 
-    var completeTag = Buffer.concat(frames);
-
-    try {
-        var data = fs.readFileSync(filepath);
-        data = this.removeTagsFromBuffer(data) || data;
-        var rewriteFile = Buffer.concat([completeTag, data]);
-        fs.writeFileSync(filepath, rewriteFile, 'binary');
-    } catch(e) {
-        return e;
-    }
-
-    return true;
+    return Buffer.concat(frames);
 }
 
 NodeID3.prototype.read = function(filebuffer) {
